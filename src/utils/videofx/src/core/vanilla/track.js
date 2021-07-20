@@ -36,22 +36,33 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var blur_1 = require("./core/vanilla/blur");
-var track_1 = require("./core/vanilla/track");
-(function () { return __awaiter(void 0, void 0, void 0, function () {
-    var video, canvas;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                video = document.getElementById('input');
-                canvas = document.getElementById('output');
-                return [4 /*yield*/, track_1["default"](video, canvas)];
-            case 1:
-                _a.sent();
-                return [4 /*yield*/, blur_1.blur(video, canvas)];
-            case 2:
-                _a.sent();
-                return [2 /*return*/];
-        }
-    });
-}); })();
+var setupVideo = function (video, canvas) {
+    return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+        var width, height, constraints, _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    width = 640;
+                    height = 480;
+                    constraints = {
+                        video: {
+                            width: width,
+                            height: height,
+                            frameRate: { ideal: 30, max: 30 }
+                        }
+                    };
+                    video.addEventListener('loadeddata', function () {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        resolve();
+                    });
+                    _a = video;
+                    return [4 /*yield*/, navigator.mediaDevices.getUserMedia(constraints)];
+                case 1:
+                    _a.srcObject = _b.sent();
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+};
+exports["default"] = setupVideo;

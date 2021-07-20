@@ -36,22 +36,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var blur_1 = require("./core/vanilla/blur");
-var track_1 = require("./core/vanilla/track");
-(function () { return __awaiter(void 0, void 0, void 0, function () {
-    var video, canvas;
+exports.blur = void 0;
+var pipeline_1 = require("./pipeline");
+var TFLite_1 = require("./TFLite");
+var blur = function (video, canvas) { return __awaiter(void 0, void 0, void 0, function () {
+    var tflite, backgroundConfig, segmentationConfig, webglPipeline;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0:
-                video = document.getElementById('input');
-                canvas = document.getElementById('output');
-                return [4 /*yield*/, track_1["default"](video, canvas)];
+            case 0: return [4 /*yield*/, TFLite_1.getTFLite()];
             case 1:
-                _a.sent();
-                return [4 /*yield*/, blur_1.blur(video, canvas)];
-            case 2:
-                _a.sent();
+                tflite = (_a.sent()).tflite;
+                backgroundConfig = { type: 'blur' };
+                segmentationConfig = {
+                    model: 'meet',
+                    backend: 'wasm',
+                    inputResolution: '160x96',
+                    // inputResolution: '256x144', // consider using this and the larger model when SIMD is available
+                    pipeline: 'webgl2'
+                };
+                webglPipeline = pipeline_1["default"](video, canvas, backgroundConfig, segmentationConfig, tflite).webglPipeline;
+                webglPipeline.render();
                 return [2 /*return*/];
         }
     });
-}); })();
+}); };
+exports.blur = blur;

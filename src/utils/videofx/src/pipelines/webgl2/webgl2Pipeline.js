@@ -44,14 +44,14 @@ exports.buildWebGL2Pipeline = void 0;
 var segmentationHelper_1 = require("../../core/helpers/segmentationHelper");
 var webglHelper_1 = require("../helpers/webglHelper");
 var backgroundBlurStage_1 = require("./backgroundBlurStage");
-var backgroundImageStage_1 = require("./backgroundImageStage");
 var jointBilateralFilterStage_1 = require("./jointBilateralFilterStage");
-var loadSegmentationStage_1 = require("./loadSegmentationStage");
 var resizingStage_1 = require("./resizingStage");
 var softmaxStage_1 = require("./softmaxStage");
-function buildWebGL2Pipeline(sourcePlayback, backgroundImage, backgroundConfig, segmentationConfig, canvas, tflite, addFrameEvent) {
+function buildWebGL2Pipeline(video, backgroundConfig, segmentationConfig, canvas, tflite, addFrameEvent) {
     var vertexShaderSource = webglHelper_1.glsl(templateObject_1 || (templateObject_1 = __makeTemplateObject(["#version 300 es\n\n    in vec2 a_position;\n    in vec2 a_texCoord;\n\n    out vec2 v_texCoord;\n\n    void main() {\n      gl_Position = vec4(a_position, 0.0, 1.0);\n      v_texCoord = a_texCoord;\n    }\n  "], ["#version 300 es\n\n    in vec2 a_position;\n    in vec2 a_texCoord;\n\n    out vec2 v_texCoord;\n\n    void main() {\n      gl_Position = vec4(a_position, 0.0, 1.0);\n      v_texCoord = a_texCoord;\n    }\n  "])));
-    var frameWidth = sourcePlayback.width, frameHeight = sourcePlayback.height;
+    var width = video.videoWidth, height = video.videoHeight;
+    var frameWidth = width !== null && width !== void 0 ? width : 0;
+    var frameHeight = height !== null && height !== void 0 ? height : 0;
     var _a = segmentationHelper_1.inputResolutions[segmentationConfig.inputResolution], segmentationWidth = _a[0], segmentationHeight = _a[1];
     var gl = canvas.getContext('webgl2');
     var vertexShader = webglHelper_1.compileShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
@@ -77,13 +77,9 @@ function buildWebGL2Pipeline(sourcePlayback, backgroundImage, backgroundConfig, 
     var segmentationTexture = webglHelper_1.createTexture(gl, gl.RGBA8, segmentationWidth, segmentationHeight);
     var personMaskTexture = webglHelper_1.createTexture(gl, gl.RGBA8, frameWidth, frameHeight);
     var resizingStage = resizingStage_1.buildResizingStage(gl, vertexShader, positionBuffer, texCoordBuffer, segmentationConfig, tflite);
-    var loadSegmentationStage = segmentationConfig.model === 'meet'
-        ? softmaxStage_1.buildSoftmaxStage(gl, vertexShader, positionBuffer, texCoordBuffer, segmentationConfig, tflite, segmentationTexture)
-        : loadSegmentationStage_1.buildLoadSegmentationStage(gl, vertexShader, positionBuffer, texCoordBuffer, segmentationConfig, tflite, segmentationTexture);
+    var loadSegmentationStage = softmaxStage_1.buildSoftmaxStage(gl, vertexShader, positionBuffer, texCoordBuffer, segmentationConfig, tflite, segmentationTexture);
     var jointBilateralFilterStage = jointBilateralFilterStage_1.buildJointBilateralFilterStage(gl, vertexShader, positionBuffer, texCoordBuffer, segmentationTexture, segmentationConfig, personMaskTexture, canvas);
-    var backgroundStage = backgroundConfig.type === 'blur'
-        ? backgroundBlurStage_1.buildBackgroundBlurStage(gl, vertexShader, positionBuffer, texCoordBuffer, personMaskTexture, canvas)
-        : backgroundImageStage_1.buildBackgroundImageStage(gl, positionBuffer, texCoordBuffer, personMaskTexture, backgroundImage, canvas);
+    var backgroundStage = backgroundBlurStage_1.buildBackgroundBlurStage(gl, vertexShader, positionBuffer, texCoordBuffer, personMaskTexture, canvas);
     function render() {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -93,7 +89,7 @@ function buildWebGL2Pipeline(sourcePlayback, backgroundImage, backgroundConfig, 
                 gl.bindTexture(gl.TEXTURE_2D, inputFrameTexture);
                 // texImage2D seems faster than texSubImage2D to upload
                 // video texture
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourcePlayback.htmlElement);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
                 gl.bindVertexArray(vertexArray);
                 resizingStage.render();
                 addFrameEvent();
@@ -109,22 +105,8 @@ function buildWebGL2Pipeline(sourcePlayback, backgroundImage, backgroundConfig, 
     function updatePostProcessingConfig(postProcessingConfig) {
         jointBilateralFilterStage.updateSigmaSpace(postProcessingConfig.jointBilateralFilter.sigmaSpace);
         jointBilateralFilterStage.updateSigmaColor(postProcessingConfig.jointBilateralFilter.sigmaColor);
-        if (backgroundConfig.type === 'image') {
-            var backgroundImageStage = backgroundStage;
-            backgroundImageStage.updateCoverage(postProcessingConfig.coverage);
-            backgroundImageStage.updateLightWrapping(postProcessingConfig.lightWrapping);
-            backgroundImageStage.updateBlendMode(postProcessingConfig.blendMode);
-        }
-        else if (backgroundConfig.type === 'blur') {
-            var backgroundBlurStage = backgroundStage;
-            backgroundBlurStage.updateCoverage(postProcessingConfig.coverage);
-        }
-        else {
-            // TODO Handle no background in a separate pipeline path
-            var backgroundImageStage = backgroundStage;
-            backgroundImageStage.updateCoverage([0, 0.9999]);
-            backgroundImageStage.updateLightWrapping(0);
-        }
+        var backgroundBlurStage = backgroundStage;
+        backgroundBlurStage.updateCoverage(postProcessingConfig.coverage);
     }
     function cleanUp() {
         backgroundStage.cleanUp();
