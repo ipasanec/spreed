@@ -61,6 +61,7 @@ VideoEffects.prototype = {
 
 	_stopTfLiteStream() {
 		this._playing = false
+		window.stopBlur = true
 		this._attachment = null
 		this._temporaryCanvas = null
 		const tracks = this._stream.getTracks()
@@ -133,6 +134,7 @@ VideoEffects.prototype = {
 	},
 
 	_useTfLite(stream) {
+		window.stopBlur = false
 		window.segmFull = segmFull.split('/').pop()
 		window.segmLite = segmLite.split('/').pop()
 		window.mlKit = mlKit.split('/').pop()
@@ -146,13 +148,6 @@ VideoEffects.prototype = {
 		this._videoSource.srcObject = this._stream
 		this._videoSource.play()
 		this._playing = true
-		// this._attachment = document.body.appendChild(this._temporaryCanvas)
-		// this._attachment.style.position = 'absolute'
-		// this._attachment.style.top = '30vh'
-		// this._attachment.style.left = '30vh'
-		// this._attachment.style.zIndex = '99999'
-
-		// setupVideo(this._videoSource, this._temporaryCanvas)
 		blur(this._videoSource, this._temporaryCanvas)
 
 		this._canvasBlurredStream = this._temporaryCanvas.captureStream()
