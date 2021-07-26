@@ -39,6 +39,7 @@ exports.__esModule = true;
 exports.buildCanvas2dPipeline = void 0;
 var segmentationHelper_1 = require("../../core/helpers/segmentationHelper");
 function buildCanvas2dPipeline(sourcePlayback, backgroundConfig, segmentationConfig, canvas, bodyPix, tflite, addFrameEvent) {
+    console.log('canvas2dPipeline is called');
     var ctx = canvas.getContext('2d');
     var _a = segmentationHelper_1.inputResolutions[segmentationConfig.inputResolution], segmentationWidth = _a[0], segmentationHeight = _a[1];
     var segmentationPixelCount = segmentationWidth * segmentationHeight;
