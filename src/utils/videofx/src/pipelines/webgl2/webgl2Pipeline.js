@@ -48,16 +48,12 @@ var jointBilateralFilterStage_1 = require("./jointBilateralFilterStage");
 var resizingStage_1 = require("./resizingStage");
 var softmaxStage_1 = require("./softmaxStage");
 function buildWebGL2Pipeline(video, backgroundConfig, segmentationConfig, canvas, tflite, addFrameEvent) {
-    console.log('webgl2pipline canvas');
-    console.log(canvas);
     var vertexShaderSource = webglHelper_1.glsl(templateObject_1 || (templateObject_1 = __makeTemplateObject(["#version 300 es\n\n    in vec2 a_position;\n    in vec2 a_texCoord;\n\n    out vec2 v_texCoord;\n\n    void main() {\n      gl_Position = vec4(a_position, 0.0, 1.0);\n      v_texCoord = a_texCoord;\n    }\n  "], ["#version 300 es\n\n    in vec2 a_position;\n    in vec2 a_texCoord;\n\n    out vec2 v_texCoord;\n\n    void main() {\n      gl_Position = vec4(a_position, 0.0, 1.0);\n      v_texCoord = a_texCoord;\n    }\n  "])));
     var width = video.videoWidth, height = video.videoHeight;
     var frameWidth = width !== null && width !== void 0 ? width : 0;
     var frameHeight = height !== null && height !== void 0 ? height : 0;
     var _a = segmentationHelper_1.inputResolutions[segmentationConfig.inputResolution], segmentationWidth = _a[0], segmentationHeight = _a[1];
     var gl = canvas.getContext('webgl2');
-    console.log('gl');
-    console.log(gl);
     var vertexShader = webglHelper_1.compileShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     var vertexArray = gl.createVertexArray();
     gl.bindVertexArray(vertexArray);
